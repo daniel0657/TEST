@@ -1,0 +1,52 @@
+# =============================================================================
+# BERMUDA Stealth Gateway NG — Docker Build Context Exclusions
+# =============================================================================
+
+# 1. Version Control Metadata & Repositories
+.git
+.gitignore
+.gitattributes
+.github
+
+# 2. Standalone Client Artifacts (Kept strictly on client machine, never in server image)
+index.html
+*.html
+
+# 3. Documentation & Markdown Notes
+README.md
+*.md
+docs/
+LICENSE*
+
+# 4. Local Build Artifacts, Precompiled Binaries & Testing Dumps
+out/
+bin/
+dist/
+*.exe
+*.bin
+*.dll
+*.so
+*.dylib
+bermuda-gateway
+xray
+*.test
+*.out
+*.prof
+
+# 5. OS Artifacts, Metadata & Temporary Swaps
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# 6. IDEs & Editor Configuration Trees
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# 7. Local Logs & Cache Dumps
+*.log
+tmp/
+temp/
