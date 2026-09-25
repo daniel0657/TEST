@@ -1,0 +1,262 @@
+{
+  "log": {
+    "loglevel": "warning",
+    "dnsLog": false
+  },
+  "dns": {
+    "servers": [
+      "https://1.1.1.1/dns-query",
+      "https://8.8.8.8/dns-query",
+      "localhost"
+    ],
+    "queryStrategy": "UseIP",
+    "disableCache": false,
+    "disableFallback": false
+  },
+  "policy": {
+    "levels": {
+      "0": {
+        "handshake": 4,
+        "connIdle": 300,
+        "uplinkOnly": 0,
+        "downlinkOnly": 0,
+        "bufferSize": 512
+      },
+      "1": {
+        "handshake": 4,
+        "connIdle": 300,
+        "uplinkOnly": 0,
+        "downlinkOnly": 0,
+        "bufferSize": 1024
+      }
+    },
+    "system": {
+      "statsInboundUplink": false,
+      "statsInboundDownlink": false,
+      "statsOutboundUplink": false,
+      "statsOutboundDownlink": false
+    }
+  },
+  "inbounds": [
+    {
+      "tag": "vless-xhttp-in",
+      "listen": "127.0.0.1",
+      "port": 18443,
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "id": "24c8b9d5-4e71-4a8e-a96c-13d8a5726201",
+            "level": 0,
+            "email": "normal@cazar"
+          },
+          {
+            "id": "e7f2b1c4-9a3d-4c5e-8b6f-7123d4e5f602",
+            "level": 1,
+            "email": "ai@cazar"
+          }
+        ],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "xhttp",
+        "security": "none",
+        "xhttpSettings": {
+          "path": "/bermuda-xhttp",
+          "mode": "auto",
+          "xPaddingBytes": "100-1000",
+          "scMaxEachPostBytes": "1000000-2000000",
+          "scMinPostsIntervalMs": "10-30",
+          "scMaxBufferedPosts": 30,
+          "scStreamUpServerSecs": "20-80"
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls", "quic"],
+        "routeOnly": false
+      }
+    },
+    {
+      "tag": "vless-ws-in",
+      "listen": "127.0.0.1",
+      "port": 18444,
+      "protocol": "vless",
+      "settings": {
+        "clients": [
+          {
+            "id": "24c8b9d5-4e71-4a8e-a96c-13d8a5726201",
+            "level": 0,
+            "email": "normal@cazar"
+          },
+          {
+            "id": "e7f2b1c4-9a3d-4c5e-8b6f-7123d4e5f602",
+            "level": 1,
+            "email": "ai@cazar"
+          }
+        ],
+        "decryption": "none"
+      },
+      "streamSettings": {
+        "network": "ws",
+        "security": "none",
+        "wsSettings": {
+          "path": "/bermuda-ws"
+        }
+      },
+      "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls", "quic"],
+        "routeOnly": false
+      }
+    }
+  ],
+  "outbounds": [
+    {
+      "tag": "direct-normal",
+      "protocol": "freedom",
+      "settings": {},
+      "streamSettings": {
+        "sockopt": {
+          "domainStrategy": "UseIPv4",
+          "tcpKeepAliveIdle": 60,
+          "tcpKeepAliveInterval": 15,
+          "tcpUserTimeout": 30000
+        }
+      }
+    },
+    {
+      "tag": "direct-ai",
+      "protocol": "freedom",
+      "settings": {},
+      "streamSettings": {
+        "sockopt": {
+          "domainStrategy": "UseIP",
+          "happyEyeballs": {
+            "prioritizeIPv6": true,
+            "tryDelayMs": 250,
+            "interleave": 1,
+            "maxConcurrentTry": 4
+          },
+          "tcpMaxSeg": 1320,
+          "tcpKeepAliveIdle": 60,
+          "tcpKeepAliveInterval": 15,
+          "tcpUserTimeout": 30000
+        }
+      }
+    },
+    {
+      "tag": "block",
+      "protocol": "blackhole",
+      "settings": {
+        "response": {
+          "type": "none"
+        }
+      }
+    },
+    {
+      "tag": "dns-out",
+      "protocol": "dns",
+      "settings": {}
+    }
+  ],
+  "routing": {
+    "domainStrategy": "IPIfNonMatch",
+    "rules": [
+      {
+        "type": "field",
+        "inboundTag": ["vless-xhttp-in", "vless-ws-in"],
+        "protocol": ["dns"],
+        "outboundTag": "dns-out"
+      },
+      {
+        "type": "field",
+        "ip": ["127.0.0.0/8", "::1/128"],
+        "port": "18443,18444",
+        "outboundTag": "direct-normal"
+      },
+      {
+        "type": "field",
+        "network": "tcp",
+        "port": "25,465,587",
+        "outboundTag": "block"
+      },
+      {
+        "type": "field",
+        "protocol": ["bittorrent"],
+        "outboundTag": "block"
+      },
+      {
+        "type": "field",
+        "ip": [
+          "geoip:private",
+          "0.0.0.0/8",
+          "10.0.0.0/8",
+          "100.64.0.0/10",
+          "127.0.0.0/8",
+          "169.254.0.0/16",
+          "172.16.0.0/12",
+          "192.0.0.0/24",
+          "192.0.2.0/24",
+          "192.88.99.0/24",
+          "192.168.0.0/16",
+          "198.18.0.0/15",
+          "198.51.100.0/24",
+          "203.0.113.0/24",
+          "224.0.0.0/3",
+          "::/128",
+          "::1/128",
+          "fc00::/7",
+          "fe80::/10",
+          "2001:db8::/32",
+          "ff00::/8"
+        ],
+        "outboundTag": "block"
+      },
+      {
+        "type": "field",
+        "domain": ["geosite:category-ads-all"],
+        "outboundTag": "block"
+      },
+      {
+        "type": "field",
+        "user": ["ai@cazar"],
+        "outboundTag": "direct-ai"
+      },
+      {
+        "type": "field",
+        "domain": [
+          "geosite:category-ai-!cn",
+          "domain:openai.com",
+          "domain:chatgpt.com",
+          "domain:oaistatic.com",
+          "domain:oaiusercontent.com",
+          "domain:anthropic.com",
+          "domain:claude.ai",
+          "domain:claudeusercontent.com",
+          "domain:gemini.google.com",
+          "domain:generativelanguage.googleapis.com",
+          "domain:openaiapi-site.azureedge.net",
+          "domain:aistudio.google.com",
+          "domain:bard.google.com",
+          "domain:deepseek.com",
+          "domain:perplexity.ai",
+          "domain:pplx.ai",
+          "domain:x.ai",
+          "domain:grok.com",
+          "domain:mistral.ai",
+          "domain:groq.com",
+          "domain:copilot.microsoft.com",
+          "domain:auth0.com",
+          "domain:sora.com"
+        ],
+        "outboundTag": "direct-ai"
+      },
+      {
+        "type": "field",
+        "network": "tcp,udp",
+        "outboundTag": "direct-normal"
+      }
+    ]
+  }
+}
